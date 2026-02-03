@@ -99,6 +99,7 @@
             padding: 10px;
             border: 1px solid #000000;
             background: white;
+            cursor: pointer;
         }
         
         .btn {
@@ -161,6 +162,12 @@
             top: 0;
             z-index: 10;
             white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #222222;
         }
         
         th.sorted-asc::after { content: ' ↑'; }
