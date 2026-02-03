@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 40px 20px;
         }
@@ -43,7 +43,7 @@
         
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1px;
             background: #000000;
             border: 1px solid #000000;
@@ -138,6 +138,27 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        th:hover {
+            background: #333333;
+        }
+        
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.3;
+        }
+        
+        th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+        
+        th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
         }
         
         td {
@@ -180,20 +201,11 @@
             100% { transform: rotate(360deg); }
         }
         
-        .progress-bar {
-            width: 100%;
-            height: 2px;
-            background: #e5e5e5;
-            position: relative;
+        .truncate {
+            max-width: 200px;
+            white-space: nowrap;
             overflow: hidden;
-            margin-top: 8px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #000000;
-            width: 0%;
-            transition: width 0.3s;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -201,6 +213,7 @@
     <div class="container">
         <div class="header">
             <h1>User Database</h1>
+            <p>Full metadata with sortable columns</p>
         </div>
 
         <div class="stats">
@@ -213,13 +226,21 @@
                 <div class="label">Displayed</div>
             </div>
             <div class="stat-card">
+                <div class="value" id="avgScore">0</div>
+                <div class="label">Avg Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="topRegion">--</div>
+                <div class="label">Top Region</div>
+            </div>
+            <div class="stat-card">
                 <div class="value" id="lastUpdate">--:--</div>
                 <div class="label">Last Updated</div>
             </div>
         </div>
 
         <div class="controls">
-            <input type="text" id="searchBox" class="search-box" placeholder="Search by username, display name, or ID">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search by name, username, ID, region, interests, or favorites">
             <button class="btn" onclick="loadAllData()">Refresh</button>
             <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
         </div>
@@ -228,18 +249,21 @@
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <div class="loading-text" id="loadingText">Loading users...</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar"></div>
-                </div>
             </div>
             <table id="userTable" style="display: none;">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Display Name</th>
-                        <th>Username</th>
-                        <th>User ID</th>
-                        <th>Account Age</th>
+                        <th class="sortable" data-column="index" data-type="number">#</th>
+                        <th class="sortable" data-column="display_name" data-type="text">Display Name</th>
+                        <th class="sortable" data-column="username" data-type="text">Username</th>
+                        <th class="sortable" data-column="user_id" data-type="text">User ID</th>
+                        <th class="sortable" data-column="region" data-type="text">Region</th>
+                        <th class="sortable" data-column="score" data-type="number">Score</th>
+                        <th class="sortable" data-column="friends" data-type="number">Friends</th>
+                        <th class="sortable" data-column="donated" data-type="number">Donated</th>
+                        <th class="sortable" data-column="received" data-type="number">Received</th>
+                        <th class="sortable" data-column="interests" data-type="length">Interests</th>
+                        <th class="sortable" data-column="favorites" data-type="length">Favorites</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -252,6 +276,8 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmh0aGV5dGZ4aHZzZHlibnJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjA1NTIsImV4cCI6MjA4NTYzNjU1Mn0.XHmeniPie7Jvsr0dokb0rFGJ0o1r80iZlSr7PYhK10A";
         
         let allUsers = [];
+        let displayedUsers = [];
+        let currentSort = { column: null, direction: 'asc' };
 
         async function loadAllData() {
             document.getElementById('loading').style.display = 'block';
@@ -279,7 +305,6 @@
                     const batch = await response.json();
                     allUsers = allUsers.concat(batch);
                     
-                    // Update progress
                     document.getElementById('loadingText').textContent = 
                         `Loading users... (${allUsers.length.toLocaleString()} loaded)`;
                     
@@ -301,6 +326,7 @@
         }
 
         function displayUsers(users) {
+            displayedUsers = users;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
@@ -308,10 +334,16 @@
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${user.display_name}</td>
-                    <td>@${user.username}</td>
+                    <td>${user.display_name || 'n/a'}</td>
+                    <td>@${user.username || 'n/a'}</td>
                     <td>${user.user_id}</td>
-                    <td>${user.age}</td>
+                    <td>${user.region || 'Unknown'}</td>
+                    <td>${user.score?.toLocaleString() || 0}</td>
+                    <td>${user.friends?.toLocaleString() || 0}</td>
+                    <td>${user.donated?.toLocaleString() || 0}</td>
+                    <td>${user.received?.toLocaleString() || 0}</td>
+                    <td class="truncate" title="${user.interests || ''}">${user.interests || 'None'}</td>
+                    <td class="truncate" title="${user.favorites || ''}">${user.favorites || 'None'}</td>
                 `;
             });
 
@@ -320,7 +352,64 @@
 
         function updateStats() {
             document.getElementById('totalCount').textContent = allUsers.length.toLocaleString();
+            
+            const avgScore = allUsers.reduce((sum, u) => sum + (u.score || 0), 0) / allUsers.length;
+            document.getElementById('avgScore').textContent = Math.round(avgScore).toLocaleString();
+            
+            const regionCounts = {};
+            allUsers.forEach(u => {
+                const region = u.region || 'Unknown';
+                regionCounts[region] = (regionCounts[region] || 0) + 1;
+            });
+            const topRegion = Object.keys(regionCounts).reduce((a, b) => 
+                regionCounts[a] > regionCounts[b] ? a : b, 'Unknown');
+            document.getElementById('topRegion').textContent = topRegion;
+            
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function sortTable(column, type) {
+            
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            const header = document.querySelector(`th[data-column="${column}"]`);
+            header.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+            const sorted = [...displayedUsers].sort((a, b) => {
+                let valA, valB;
+
+                if (column === 'index') {
+                    return 0; 
+                }
+
+                if (type === 'number') {
+                    valA = a[column] || 0;
+                    valB = b[column] || 0;
+                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                } else if (type === 'text') {
+                    valA = (a[column] || '').toLowerCase();
+                    valB = (b[column] || '').toLowerCase();
+                    if (currentSort.direction === 'asc') {
+                        return valA.localeCompare(valB);
+                    } else {
+                        return valB.localeCompare(valA);
+                    }
+                } else if (type === 'length') {
+                    valA = (a[column] || '').length;
+                    valB = (b[column] || '').length;
+                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            displayUsers(sorted);
         }
 
         function searchUsers() {
@@ -332,9 +421,12 @@
             }
 
             const filtered = allUsers.filter(user => 
-                user.display_name.toLowerCase().includes(query) ||
-                user.username.toLowerCase().includes(query) ||
-                user.user_id.includes(query)
+                (user.display_name || '').toLowerCase().includes(query) ||
+                (user.username || '').toLowerCase().includes(query) ||
+                (user.user_id || '').includes(query) ||
+                (user.region || '').toLowerCase().includes(query) ||
+                (user.interests || '').toLowerCase().includes(query) ||
+                (user.favorites || '').toLowerCase().includes(query)
             );
 
             displayUsers(filtered);
@@ -342,24 +434,36 @@
 
         function exportCSV() {
             const csv = [
-                ['Display Name', 'Username', 'User ID', 'Account Age'],
-                ...allUsers.map(u => [u.display_name, u.username, u.user_id, u.age])
+                ['Display Name', 'Username', 'User ID', 'Region', 'Score', 'Friends', 'Donated', 'Received', 'Interests', 'Favorites'],
+                ...displayedUsers.map(u => [
+                    u.display_name, u.username, u.user_id, u.region,
+                    u.score, u.friends, u.donated, u.received,
+                    u.interests, u.favorites
+                ])
             ].map(row => row.join(',')).join('\n');
 
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `users_full_data_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         }
 
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.column;
+                    const type = th.dataset.type;
+                    sortTable(column, type);
+                });
+            });
+        });
+
         document.getElementById('searchBox').addEventListener('input', searchUsers);
 
-        // Auto-refresh every 30 seconds
         setInterval(loadAllData, 30000);
 
-        // Load on page load
         loadAllData();
     </script>
 </body>
