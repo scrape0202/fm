@@ -21,91 +21,84 @@
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 20px;
         }
         
         .header {
             border-bottom: 1px solid #000000;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
         }
         
         .header h1 {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 600;
         }
         
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 1px;
             background: #000000;
             border: 1px solid #000000;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         
         .stat-card {
             background: #ffffff;
-            padding: 20px;
+            padding: 15px;
         }
         
         .stat-card .value {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         
         .stat-card .label {
             color: #666666;
-            font-size: 13px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .controls {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
-            align-items: center;
         }
         
         .search-box {
-            flex: 1;
-            min-width: 300px;
-            padding: 10px 16px;
+            flex: 2;
+            min-width: 250px;
+            padding: 12px;
             border: 1px solid #000000;
             font-size: 14px;
-            font-family: inherit;
         }
         
-        .search-box:focus {
-            outline: none;
-            border: 2px solid #000000;
-            padding: 9px 15px;
-        }
-
         .select-box {
+            flex: 1;
+            min-width: 120px;
             padding: 10px;
             border: 1px solid #000000;
             background: white;
-            font-family: inherit;
         }
         
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
         .btn {
-            padding: 10px 20px;
+            flex: 1;
+            padding: 12px;
             border: 1px solid #000000;
             background: #000000;
             color: #ffffff;
             font-size: 14px;
-            font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn:hover {
-            background: #ffffff;
-            color: #000000;
         }
         
         .btn.secondary {
@@ -117,16 +110,18 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 5px;
-            margin: 20px 0;
+            gap: 4px;
+            margin: 15px 0;
+            flex-wrap: wrap;
         }
 
         .page-btn {
-            padding: 5px 10px;
+            padding: 6px 10px;
             border: 1px solid #000000;
             background: #fff;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
+            min-width: 35px;
         }
 
         .page-btn.active {
@@ -134,85 +129,75 @@
             color: #fff;
         }
 
-        .page-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
         .table-container {
             border: 1px solid #000000;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1000px;
         }
         
         th {
             background: #000000;
             color: #ffffff;
-            padding: 12px 16px;
+            padding: 12px;
             text-align: left;
-            font-weight: 500;
-            font-size: 13px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             position: sticky;
             top: 0;
             z-index: 10;
-            cursor: pointer;
-            user-select: none;
+            white-space: nowrap;
         }
-        
-        th:hover { background: #333333; }
         
         th.sorted-asc::after { content: ' ↑'; }
         th.sorted-desc::after { content: ' ↓'; }
         
         td {
-            padding: 12px 16px;
+            padding: 12px;
             border-bottom: 1px solid #e5e5e5;
-            font-size: 14px;
+            font-size: 13px;
         }
         
-        tr:hover { background: #f5f5f5; }
-
         .flag-icon {
-            width: 20px;
-            height: 14px;
+            width: 18px;
+            height: 12px;
+            margin-right: 6px;
             vertical-align: middle;
-            margin-right: 8px;
-            object-fit: cover;
-            border: 1px solid #eee;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        
-        .spinner {
-            border: 2px solid #e5e5e5;
-            border-top: 2px solid #000000;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            border: 1px solid #f0f0f0;
         }
         
         .truncate {
-            max-width: 200px;
+            max-width: 150px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 24px; }
+            .stat-card { padding: 10px; }
+            .stat-card .value { font-size: 18px; }
+            .controls { flex-direction: column; }
+            .search-box, .select-box { width: 100%; }
+        }
+
+        .loading { text-align: center; padding: 40px; }
+        .spinner {
+            border: 2px solid #e5e5e5;
+            border-top: 2px solid #000000;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -228,32 +213,30 @@
             </div>
             <div class="stat-card">
                 <div class="value" id="displayedCount">0</div>
-                <div class="label">Displayed</div>
+                <div class="label">Filtered</div>
             </div>
             <div class="stat-card">
                 <div class="value" id="highScoreCount">0</div>
-                <div class="label">Users Score > 1,000</div>
+                <div class="label">Score > 1,000</div>
             </div>
             <div class="stat-card">
                 <div class="value" id="topRegion">--</div>
                 <div class="label">Top Region</div>
             </div>
-            <div class="stat-card">
-                <div class="value" id="lastUpdate">--:--</div>
-                <div class="label">Last Updated</div>
-            </div>
         </div>
 
         <div class="controls">
-            <input type="text" id="searchBox" class="search-box" placeholder="Search users...">
-            <select id="pageSize" class="select-box" onchange="changePageSize()">
-                <option value="25">25 per page</option>
-                <option value="50">50 per page</option>
-                <option value="100" selected>100 per page</option>
-                <option value="500">500 per page</option>
-                <option value="1000">1000 per page</option>
-            </select>
-            <button class="btn" onclick="loadAllData(true)">Refresh</button>
+            <input type="text" id="searchBox" class="search-box" placeholder="Search name, ID, region, interests...">
+            <div style="display:flex; gap:10px;">
+                <select id="pageSize" class="select-box" onchange="changePageSize()">
+                    <option value="25">25 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100" selected>100 / page</option>
+                    <option value="500">500 / page</option>
+                    <option value="1000">1000 / page</option>
+                </select>
+                <button class="btn" onclick="loadAllData(true)">Refresh</button>
+            </div>
             <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
         </div>
 
@@ -262,20 +245,20 @@
         <div class="table-container">
             <div id="loading" class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text" id="loadingText">Loading users...</div>
             </div>
             <table id="userTable" style="display: none;">
                 <thead>
                     <tr>
-                        <th class="sortable" data-column="created_at" data-type="text">Created At</th>
-                        <th class="sortable" data-column="display_name" data-type="text">Display Name</th>
-                        <th class="sortable" data-column="username" data-type="text">Username</th>
-                        <th class="sortable" data-column="user_id" data-type="text">User ID</th>
-                        <th class="sortable" data-column="region" data-type="text">Region</th>
-                        <th class="sortable" data-column="score" data-type="number">Score</th>
-                        <th class="sortable" data-column="friends" data-type="number">Friends</th>
-                        <th class="sortable" data-column="donated" data-type="number">Donated</th>
-                        <th class="sortable" data-column="received" data-type="number">Received</th>
+                        <th class="sortable" data-column="display_name">Name</th>
+                        <th class="sortable" data-column="username">User</th>
+                        <th class="sortable" data-column="user_id">ID</th>
+                        <th class="sortable" data-column="region">Region</th>
+                        <th class="sortable" data-column="score">Score</th>
+                        <th class="sortable" data-column="friends">Friends</th>
+                        <th class="sortable" data-column="donated">Donated</th>
+                        <th class="sortable" data-column="received">Received</th>
+                        <th class="sortable" data-column="interests">Interests</th>
+                        <th class="sortable" data-column="favorites">Favorites</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -301,14 +284,11 @@
                 const countRes = await fetch(`${SUPABASE_URL}/rest/v1/users?select=count`, {
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'count=exact' }
                 });
-                const countData = await countRes.json();
                 const totalCount = parseInt(countRes.headers.get('content-range').split('/')[1]);
 
                 if (!force && totalCount === lastUserCount) return;
                 lastUserCount = totalCount;
 
-                document.getElementById('loading').style.display = 'block';
-                
                 let fetched = [];
                 let offset = 0;
                 const limit = 1000;
@@ -332,7 +312,7 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('userTable').style.display = 'table';
             } catch (error) {
-                document.getElementById('loadingText').textContent = `Error: ${error.message}`;
+                console.error(error);
             }
         }
 
@@ -343,7 +323,9 @@
                 (user.display_name || '').toLowerCase().includes(query) ||
                 (user.username || '').toLowerCase().includes(query) ||
                 (user.user_id || '').toLowerCase().includes(query) ||
-                (user.region || '').toLowerCase().includes(query)
+                (user.region || '').toLowerCase().includes(query) ||
+                (user.interests || '').toLowerCase().includes(query) ||
+                (user.favorites || '').toLowerCase().includes(query)
             );
 
             filteredUsers.sort((a, b) => {
@@ -351,7 +333,7 @@
                 let valB = b[currentSort.column];
                 
                 if (typeof valA === 'string') {
-                    valA = valA.toLowerCase();
+                    valA = (valA || '').toLowerCase();
                     valB = (valB || '').toLowerCase();
                     return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 } else {
@@ -369,26 +351,24 @@
             tbody.innerHTML = '';
 
             const start = (currentPage - 1) * pageSize;
-            const end = start + pageSize;
-            const pageData = filteredUsers.slice(start, end);
+            const pageData = filteredUsers.slice(start, start + pageSize);
 
             pageData.forEach(user => {
                 const row = tbody.insertRow();
-                const regionCode = (user.region || '').toLowerCase();
-                const flagImg = regionCode && regionCode.length === 2 
-                    ? `<img src="https://flagcdn.com/w40/${regionCode}.png" class="flag-icon" onerror="this.style.display='none'">` 
-                    : '';
+                const rc = (user.region || '').toLowerCase();
+                const flag = rc && rc.length === 2 ? `<img src="https://flagcdn.com/w40/${rc}.png" class="flag-icon">` : '';
 
                 row.innerHTML = `
-                    <td>${new Date(user.created_at).toLocaleString()}</td>
-                    <td>${user.display_name || 'n/a'}</td>
-                    <td>@${user.username || 'n/a'}</td>
+                    <td>${user.display_name || '-'}</td>
+                    <td>@${user.username || '-'}</td>
                     <td>${user.user_id}</td>
-                    <td>${flagImg}${user.region || 'Unknown'}</td>
-                    <td>${(user.score || 0).toLocaleString()}</td>
+                    <td>${flag}${user.region || '??'}</td>
+                    <td><b>${(user.score || 0).toLocaleString()}</b></td>
                     <td>${(user.friends || 0).toLocaleString()}</td>
                     <td>${(user.donated || 0).toLocaleString()}</td>
                     <td>${(user.received || 0).toLocaleString()}</td>
+                    <td class="truncate" title="${user.interests || ''}">${user.interests || '-'}</td>
+                    <td class="truncate" title="${user.favorites || ''}">${user.favorites || '-'}</td>
                 `;
             });
 
@@ -412,42 +392,34 @@
                     container.appendChild(btn);
                 };
 
-                addBtn(1, '«', currentPage === 1);
+                addBtn(1, '«');
                 
                 let start = Math.max(1, currentPage - 2);
                 let end = Math.min(totalPages, currentPage + 2);
 
                 if (start > 1) {
                     addBtn(1);
-                    if (start > 2) { const span = document.createElement('span'); span.textContent = '...'; container.appendChild(span); }
+                    if (start > 2) { const s = document.createElement('span'); s.textContent = '...'; container.appendChild(s); }
                 }
 
-                for (let i = start; i <= end; i++) {
-                    addBtn(i, i, i === currentPage);
-                }
+                for (let i = start; i <= end; i++) addBtn(i, i, i === currentPage);
 
                 if (end < totalPages) {
-                    if (end < totalPages - 1) { const span = document.createElement('span'); span.textContent = '...'; container.appendChild(span); }
+                    if (end < totalPages - 1) { const s = document.createElement('span'); s.textContent = '...'; container.appendChild(s); }
                     addBtn(totalPages);
                 }
 
-                addBtn(totalPages, '»', currentPage === totalPages);
+                addBtn(totalPages, '»');
             });
         }
 
         function updateStats() {
             document.getElementById('totalCount').textContent = allUsers.length.toLocaleString();
-            const highScores = allUsers.filter(u => (u.score || 0) > 1000).length;
-            document.getElementById('highScoreCount').textContent = highScores.toLocaleString();
-            
-            const regionCounts = {};
-            allUsers.forEach(u => {
-                const r = u.region || 'Unknown';
-                regionCounts[r] = (regionCounts[r] || 0) + 1;
-            });
-            const top = Object.keys(regionCounts).reduce((a, b) => regionCounts[a] > regionCounts[b] ? a : b, '--');
+            document.getElementById('highScoreCount').textContent = allUsers.filter(u => (u.score || 0) > 1000).length.toLocaleString();
+            const counts = {};
+            allUsers.forEach(u => { const r = u.region || 'Unknown'; counts[r] = (counts[r] || 0) + 1; });
+            const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, '--');
             document.getElementById('topRegion').textContent = top;
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
         }
 
         function changePageSize() {
@@ -464,12 +436,8 @@
         document.querySelectorAll('th.sortable').forEach(th => {
             th.addEventListener('click', () => {
                 const col = th.dataset.column;
-                if (currentSort.column === col) {
-                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                } else {
-                    currentSort.column = col;
-                    currentSort.direction = 'asc';
-                }
+                currentSort.direction = (currentSort.column === col && currentSort.direction === 'asc') ? 'desc' : 'asc';
+                currentSort.column = col;
                 document.querySelectorAll('th').forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
                 th.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
                 applySearchAndSort();
@@ -477,15 +445,15 @@
         });
 
         function exportCSV() {
-            const cols = ['Created At', 'Display Name', 'Username', 'User ID', 'Region', 'Score', 'Friends', 'Donated', 'Received'];
+            const cols = ['Name', 'User', 'ID', 'Region', 'Score', 'Friends', 'Donated', 'Received', 'Interests', 'Favorites'];
             const csv = [cols.join(','), ...filteredUsers.map(u => [
-                u.created_at, u.display_name, u.username, u.user_id, u.region, u.score, u.friends, u.donated, u.received
+                u.display_name, u.username, u.user_id, u.region, u.score, u.friends, u.donated, u.received, `"${u.interests||''}"`, `"${u.favorites||''}"`
             ].join(','))].join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `export.csv`;
             a.click();
         }
 
