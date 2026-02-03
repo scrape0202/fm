@@ -171,6 +171,17 @@
             border-bottom: 1px solid #e5e5e5;
             font-size: 13px;
         }
+
+        .profile-link {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .profile-link:hover {
+            color: #007bff;
+        }
         
         .flag-icon {
             width: 18px;
@@ -370,10 +381,11 @@
                 const row = tbody.insertRow();
                 const rc = (user.region || '').toLowerCase();
                 const flag = rc && rc.length === 2 ? `<img src="https://flagcdn.com/w40/${rc}.png" class="flag-icon">` : '';
+                const profileUrl = `https://www.roblox.com/users/${user.user_id}/profile`;
 
                 row.innerHTML = `
-                    <td>${user.display_name || '-'}</td>
-                    <td>@${user.username || '-'}</td>
+                    <td><a href="${profileUrl}" target="_blank" class="profile-link">${user.display_name || '-'}</a></td>
+                    <td><a href="${profileUrl}" target="_blank" class="profile-link">@${user.username || '-'}</a></td>
                     <td>${user.user_id}</td>
                     <td>${flag}${user.region || '??'}</td>
                     <td><b>${(user.score || 0).toLocaleString()}</b></td>
