@@ -33,12 +33,6 @@
         .header h1 {
             font-size: 32px;
             font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            color: #666666;
-            font-size: 14px;
         }
         
         .stats {
@@ -71,8 +65,9 @@
         .controls {
             display: flex;
             gap: 12px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
         
         .search-box {
@@ -88,6 +83,13 @@
             outline: none;
             border: 2px solid #000000;
             padding: 9px 15px;
+        }
+
+        .select-box {
+            padding: 10px;
+            border: 1px solid #000000;
+            background: white;
+            font-family: inherit;
         }
         
         .btn {
@@ -110,10 +112,31 @@
             background: #ffffff;
             color: #000000;
         }
-        
-        .btn.secondary:hover {
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin: 20px 0;
+        }
+
+        .page-btn {
+            padding: 5px 10px;
+            border: 1px solid #000000;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .page-btn.active {
             background: #000000;
-            color: #ffffff;
+            color: #fff;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
         
         .table-container {
@@ -142,24 +165,10 @@
             user-select: none;
         }
         
-        th:hover {
-            background: #333333;
-        }
+        th:hover { background: #333333; }
         
-        th.sortable::after {
-            content: ' ⇅';
-            opacity: 0.3;
-        }
-        
-        th.sorted-asc::after {
-            content: ' ↑';
-            opacity: 1;
-        }
-        
-        th.sorted-desc::after {
-            content: ' ↓';
-            opacity: 1;
-        }
+        th.sorted-asc::after { content: ' ↑'; }
+        th.sorted-desc::after { content: ' ↓'; }
         
         td {
             padding: 12px 16px;
@@ -167,23 +176,20 @@
             font-size: 14px;
         }
         
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
-        tr:hover {
-            background: #f5f5f5;
+        tr:hover { background: #f5f5f5; }
+
+        .flag-icon {
+            width: 20px;
+            height: 14px;
+            vertical-align: middle;
+            margin-right: 8px;
+            object-fit: cover;
+            border: 1px solid #eee;
         }
         
         .loading {
             text-align: center;
             padding: 60px 20px;
-        }
-        
-        .loading-text {
-            font-size: 14px;
-            color: #666666;
-            margin-top: 12px;
         }
         
         .spinner {
@@ -213,7 +219,6 @@
     <div class="container">
         <div class="header">
             <h1>User Database</h1>
-            <p>Full metadata with sortable columns</p>
         </div>
 
         <div class="stats">
@@ -226,8 +231,8 @@
                 <div class="label">Displayed</div>
             </div>
             <div class="stat-card">
-                <div class="value" id="avgScore">0</div>
-                <div class="label">Avg Score</div>
+                <div class="value" id="highScoreCount">0</div>
+                <div class="label">Users Score > 1,000</div>
             </div>
             <div class="stat-card">
                 <div class="value" id="topRegion">--</div>
@@ -240,10 +245,19 @@
         </div>
 
         <div class="controls">
-            <input type="text" id="searchBox" class="search-box" placeholder="Search by name, username, ID, region, interests, or favorites">
-            <button class="btn" onclick="loadAllData()">Refresh</button>
+            <input type="text" id="searchBox" class="search-box" placeholder="Search users...">
+            <select id="pageSize" class="select-box" onchange="changePageSize()">
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100" selected>100 per page</option>
+                <option value="500">500 per page</option>
+                <option value="1000">1000 per page</option>
+            </select>
+            <button class="btn" onclick="loadAllData(true)">Refresh</button>
             <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
         </div>
+
+        <div id="paginationTop" class="pagination"></div>
 
         <div class="table-container">
             <div id="loading" class="loading">
@@ -253,7 +267,7 @@
             <table id="userTable" style="display: none;">
                 <thead>
                     <tr>
-                        <th class="sortable" data-column="index" data-type="number">#</th>
+                        <th class="sortable" data-column="created_at" data-type="text">Created At</th>
                         <th class="sortable" data-column="display_name" data-type="text">Display Name</th>
                         <th class="sortable" data-column="username" data-type="text">Username</th>
                         <th class="sortable" data-column="user_id" data-type="text">User ID</th>
@@ -262,13 +276,13 @@
                         <th class="sortable" data-column="friends" data-type="number">Friends</th>
                         <th class="sortable" data-column="donated" data-type="number">Donated</th>
                         <th class="sortable" data-column="received" data-type="number">Received</th>
-                        <th class="sortable" data-column="interests" data-type="length">Interests</th>
-                        <th class="sortable" data-column="favorites" data-type="length">Favorites</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
+
+        <div id="paginationBottom" class="pagination"></div>
     </div>
 
     <script>
@@ -276,46 +290,43 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmh0aGV5dGZ4aHZzZHlibnJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjA1NTIsImV4cCI6MjA4NTYzNjU1Mn0.XHmeniPie7Jvsr0dokb0rFGJ0o1r80iZlSr7PYhK10A";
         
         let allUsers = [];
-        let displayedUsers = [];
-        let currentSort = { column: null, direction: 'asc' };
+        let filteredUsers = [];
+        let currentPage = 1;
+        let pageSize = 100;
+        let lastUserCount = 0;
+        let currentSort = { column: 'created_at', direction: 'desc' };
 
-        async function loadAllData() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('userTable').style.display = 'none';
-            
-            allUsers = [];
-            let offset = 0;
-            const limit = 1000;
-            let hasMore = true;
-            
+        async function loadAllData(force = false) {
             try {
+                const countRes = await fetch(`${SUPABASE_URL}/rest/v1/users?select=count`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'count=exact' }
+                });
+                const countData = await countRes.json();
+                const totalCount = parseInt(countRes.headers.get('content-range').split('/')[1]);
+
+                if (!force && totalCount === lastUserCount) return;
+                lastUserCount = totalCount;
+
+                document.getElementById('loading').style.display = 'block';
+                
+                let fetched = [];
+                let offset = 0;
+                const limit = 1000;
+                let hasMore = true;
+
                 while (hasMore) {
                     const response = await fetch(
                         `${SUPABASE_URL}/rest/v1/users?select=*&order=created_at.desc&limit=${limit}&offset=${offset}`,
-                        {
-                            headers: {
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`
-                            }
-                        }
+                        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
                     );
-
-                    if (!response.ok) throw new Error('Failed to fetch data');
-
                     const batch = await response.json();
-                    allUsers = allUsers.concat(batch);
-                    
-                    document.getElementById('loadingText').textContent = 
-                        `Loading users... (${allUsers.length.toLocaleString()} loaded)`;
-                    
-                    if (batch.length < limit) {
-                        hasMore = false;
-                    } else {
-                        offset += limit;
-                    }
+                    fetched = fetched.concat(batch);
+                    if (batch.length < limit) hasMore = false;
+                    else offset += limit;
                 }
-                
-                displayUsers(allUsers);
+
+                allUsers = fetched;
+                applySearchAndSort();
                 updateStats();
                 
                 document.getElementById('loading').style.display = 'none';
@@ -325,145 +336,160 @@
             }
         }
 
-        function displayUsers(users) {
-            displayedUsers = users;
+        function applySearchAndSort() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            
+            filteredUsers = allUsers.filter(user => 
+                (user.display_name || '').toLowerCase().includes(query) ||
+                (user.username || '').toLowerCase().includes(query) ||
+                (user.user_id || '').toLowerCase().includes(query) ||
+                (user.region || '').toLowerCase().includes(query)
+            );
+
+            filteredUsers.sort((a, b) => {
+                let valA = a[currentSort.column];
+                let valB = b[currentSort.column];
+                
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = (valB || '').toLowerCase();
+                    return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    valA = valA || 0;
+                    valB = valB || 0;
+                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            users.forEach((user, index) => {
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredUsers.slice(start, end);
+
+            pageData.forEach(user => {
                 const row = tbody.insertRow();
+                const regionCode = (user.region || '').toLowerCase();
+                const flagImg = regionCode && regionCode.length === 2 
+                    ? `<img src="https://flagcdn.com/w40/${regionCode}.png" class="flag-icon" onerror="this.style.display='none'">` 
+                    : '';
+
                 row.innerHTML = `
-                    <td>${index + 1}</td>
+                    <td>${new Date(user.created_at).toLocaleString()}</td>
                     <td>${user.display_name || 'n/a'}</td>
                     <td>@${user.username || 'n/a'}</td>
                     <td>${user.user_id}</td>
-                    <td>${user.region || 'Unknown'}</td>
-                    <td>${user.score?.toLocaleString() || 0}</td>
-                    <td>${user.friends?.toLocaleString() || 0}</td>
-                    <td>${user.donated?.toLocaleString() || 0}</td>
-                    <td>${user.received?.toLocaleString() || 0}</td>
-                    <td class="truncate" title="${user.interests || ''}">${user.interests || 'None'}</td>
-                    <td class="truncate" title="${user.favorites || ''}">${user.favorites || 'None'}</td>
+                    <td>${flagImg}${user.region || 'Unknown'}</td>
+                    <td>${(user.score || 0).toLocaleString()}</td>
+                    <td>${(user.friends || 0).toLocaleString()}</td>
+                    <td>${(user.donated || 0).toLocaleString()}</td>
+                    <td>${(user.received || 0).toLocaleString()}</td>
                 `;
             });
 
-            document.getElementById('displayedCount').textContent = users.length.toLocaleString();
+            document.getElementById('displayedCount').textContent = filteredUsers.length.toLocaleString();
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredUsers.length / pageSize);
+            const containers = [document.getElementById('paginationTop'), document.getElementById('paginationBottom')];
+            
+            containers.forEach(container => {
+                container.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                const addBtn = (p, label = p, active = false) => {
+                    const btn = document.createElement('button');
+                    btn.className = `page-btn ${active ? 'active' : ''}`;
+                    btn.textContent = label;
+                    btn.onclick = () => { currentPage = p; renderTable(); window.scrollTo(0,0); };
+                    container.appendChild(btn);
+                };
+
+                addBtn(1, '«', currentPage === 1);
+                
+                let start = Math.max(1, currentPage - 2);
+                let end = Math.min(totalPages, currentPage + 2);
+
+                if (start > 1) {
+                    addBtn(1);
+                    if (start > 2) { const span = document.createElement('span'); span.textContent = '...'; container.appendChild(span); }
+                }
+
+                for (let i = start; i <= end; i++) {
+                    addBtn(i, i, i === currentPage);
+                }
+
+                if (end < totalPages) {
+                    if (end < totalPages - 1) { const span = document.createElement('span'); span.textContent = '...'; container.appendChild(span); }
+                    addBtn(totalPages);
+                }
+
+                addBtn(totalPages, '»', currentPage === totalPages);
+            });
         }
 
         function updateStats() {
             document.getElementById('totalCount').textContent = allUsers.length.toLocaleString();
-            
-            const avgScore = allUsers.reduce((sum, u) => sum + (u.score || 0), 0) / allUsers.length;
-            document.getElementById('avgScore').textContent = Math.round(avgScore).toLocaleString();
+            const highScores = allUsers.filter(u => (u.score || 0) > 1000).length;
+            document.getElementById('highScoreCount').textContent = highScores.toLocaleString();
             
             const regionCounts = {};
             allUsers.forEach(u => {
-                const region = u.region || 'Unknown';
-                regionCounts[region] = (regionCounts[region] || 0) + 1;
+                const r = u.region || 'Unknown';
+                regionCounts[r] = (regionCounts[r] || 0) + 1;
             });
-            const topRegion = Object.keys(regionCounts).reduce((a, b) => 
-                regionCounts[a] > regionCounts[b] ? a : b, 'Unknown');
-            document.getElementById('topRegion').textContent = topRegion;
-            
+            const top = Object.keys(regionCounts).reduce((a, b) => regionCounts[a] > regionCounts[b] ? a : b, '--');
+            document.getElementById('topRegion').textContent = top;
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
         }
 
-        function sortTable(column, type) {
-            
-            if (currentSort.column === column) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.column = column;
-                currentSort.direction = 'asc';
-            }
-
-            document.querySelectorAll('th').forEach(th => {
-                th.classList.remove('sorted-asc', 'sorted-desc');
-            });
-            const header = document.querySelector(`th[data-column="${column}"]`);
-            header.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
-
-            const sorted = [...displayedUsers].sort((a, b) => {
-                let valA, valB;
-
-                if (column === 'index') {
-                    return 0; 
-                }
-
-                if (type === 'number') {
-                    valA = a[column] || 0;
-                    valB = b[column] || 0;
-                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
-                } else if (type === 'text') {
-                    valA = (a[column] || '').toLowerCase();
-                    valB = (b[column] || '').toLowerCase();
-                    if (currentSort.direction === 'asc') {
-                        return valA.localeCompare(valB);
-                    } else {
-                        return valB.localeCompare(valA);
-                    }
-                } else if (type === 'length') {
-                    valA = (a[column] || '').length;
-                    valB = (b[column] || '').length;
-                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
-                }
-            });
-
-            displayUsers(sorted);
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            renderTable();
         }
 
-        function searchUsers() {
-            const query = document.getElementById('searchBox').value.toLowerCase();
-            
-            if (!query) {
-                displayUsers(allUsers);
-                return;
-            }
+        document.getElementById('searchBox').addEventListener('input', () => {
+            currentPage = 1;
+            applySearchAndSort();
+        });
 
-            const filtered = allUsers.filter(user => 
-                (user.display_name || '').toLowerCase().includes(query) ||
-                (user.username || '').toLowerCase().includes(query) ||
-                (user.user_id || '').includes(query) ||
-                (user.region || '').toLowerCase().includes(query) ||
-                (user.interests || '').toLowerCase().includes(query) ||
-                (user.favorites || '').toLowerCase().includes(query)
-            );
-
-            displayUsers(filtered);
-        }
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.column;
+                if (currentSort.column === col) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = col;
+                    currentSort.direction = 'asc';
+                }
+                document.querySelectorAll('th').forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
+                th.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                applySearchAndSort();
+            });
+        });
 
         function exportCSV() {
-            const csv = [
-                ['Display Name', 'Username', 'User ID', 'Region', 'Score', 'Friends', 'Donated', 'Received', 'Interests', 'Favorites'],
-                ...displayedUsers.map(u => [
-                    u.display_name, u.username, u.user_id, u.region,
-                    u.score, u.friends, u.donated, u.received,
-                    u.interests, u.favorites
-                ])
-            ].map(row => row.join(',')).join('\n');
-
+            const cols = ['Created At', 'Display Name', 'Username', 'User ID', 'Region', 'Score', 'Friends', 'Donated', 'Received'];
+            const csv = [cols.join(','), ...filteredUsers.map(u => [
+                u.created_at, u.display_name, u.username, u.user_id, u.region, u.score, u.friends, u.donated, u.received
+            ].join(','))].join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `users_full_data_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('th.sortable').forEach(th => {
-                th.addEventListener('click', () => {
-                    const column = th.dataset.column;
-                    const type = th.dataset.type;
-                    sortTable(column, type);
-                });
-            });
-        });
-
-        document.getElementById('searchBox').addEventListener('input', searchUsers);
-
-        setInterval(loadAllData, 30000);
-
+        setInterval(loadAllData, 15000);
         loadAllData();
     </script>
 </body>
