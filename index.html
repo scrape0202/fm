@@ -16,6 +16,22 @@
             background: #ffffff;
             color: #000000;
             line-height: 1.6;
+            padding-top: 60px;
+        }
+
+        .sticky-notice {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
         }
         
         .container {
@@ -85,15 +101,8 @@
             background: white;
         }
         
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
         .btn {
-            flex: 1;
-            padding: 12px;
+            padding: 12px 20px;
             border: 1px solid #000000;
             background: #000000;
             color: #ffffff;
@@ -179,12 +188,12 @@
         }
 
         @media (max-width: 768px) {
+            body { padding-top: 80px; }
+            .sticky-notice { font-size: 11px; padding: 10px; }
             .container { padding: 10px; }
             .header h1 { font-size: 24px; }
-            .stat-card { padding: 10px; }
-            .stat-card .value { font-size: 18px; }
             .controls { flex-direction: column; }
-            .search-box, .select-box { width: 100%; }
+            .search-box, .select-box, .btn { width: 100%; }
         }
 
         .loading { text-align: center; padding: 40px; }
@@ -201,6 +210,10 @@
     </style>
 </head>
 <body>
+    <div class="sticky-notice">
+        I've noticed searching up "Discord" or "Snap" has shown users to have games relating to that (saying they have that social) which helps you show whos a weirdo
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>User Database</h1>
@@ -227,7 +240,7 @@
 
         <div class="controls">
             <input type="text" id="searchBox" class="search-box" placeholder="Search name, ID, region, interests...">
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:10px; flex: 1;">
                 <select id="pageSize" class="select-box" onchange="changePageSize()">
                     <option value="25">25 / page</option>
                     <option value="50">50 / page</option>
