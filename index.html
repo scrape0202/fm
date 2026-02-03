@@ -477,10 +477,10 @@
         });
 
         function exportCSV() {
-            // Updated to always export allUsers (the entire database)
+            
             const cols = ['Display Name', 'Username', 'User ID', 'Region', 'Score', 'Friends', 'Donated', 'Received', 'Interests', 'Favorites', 'Created At'];
             
-            // Format each row, escaping strings with commas
+          
             const csvRows = allUsers.map(u => [
                 `"${(u.display_name || '').replace(/"/g, '""')}"`,
                 `"${(u.username || '').replace(/"/g, '""')}"`,
