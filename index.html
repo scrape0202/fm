@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            border-bottom: 1px solid #000000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666666;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            background: #000000;
+            border: 1px solid #000000;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #ffffff;
+            padding: 20px;
+        }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .stat-card .label {
+            color: #666666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            padding: 10px 16px;
+            border: 1px solid #000000;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border: 2px solid #000000;
+            padding: 9px 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid #000000;
+            background: #000000;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+        
+        .btn.secondary {
+            background: #ffffff;
+            color: #000000;
+        }
+        
+        .btn.secondary:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        .table-container {
+            border: 1px solid #000000;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #000000;
+            color: #ffffff;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e5e5;
+            font-size: 14px;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .loading-text {
+            font-size: 14px;
+            color: #666666;
+            margin-top: 12px;
+        }
+        
+        .spinner {
+            border: 2px solid #e5e5e5;
+            border-top: 2px solid #000000;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: #e5e5e5;
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #000000;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>User Database</h1>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="value" id="totalCount">0</div>
+                <div class="label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="displayedCount">0</div>
+                <div class="label">Displayed</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="lastUpdate">--:--</div>
+                <div class="label">Last Updated</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search by username, display name, or ID">
+            <button class="btn" onclick="loadAllData()">Refresh</button>
+            <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
+        </div>
+
+        <div class="table-container">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loadingText">Loading users...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+            </div>
+            <table id="userTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Display Name</th>
+                        <th>Username</th>
+                        <th>User ID</th>
+                        <th>Account Age</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://qivhtheytfxhvsdybnru.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmh0aGV5dGZ4aHZzZHlibnJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjA1NTIsImV4cCI6MjA4NTYzNjU1Mn0.XHmeniPie7Jvsr0dokb0rFGJ0o1r80iZlSr7PYhK10A";
+        
+        let allUsers = [];
+
+        async function loadAllData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('userTable').style.display = 'none';
+            
+            allUsers = [];
+            let offset = 0;
+            const limit = 1000;
+            let hasMore = true;
+            
+            try {
+                while (hasMore) {
+                    const response = await fetch(
+                        `${SUPABASE_URL}/rest/v1/users?select=*&order=created_at.desc&limit=${limit}&offset=${offset}`,
+                        {
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            }
+                        }
+                    );
+
+                    if (!response.ok) throw new Error('Failed to fetch data');
+
+                    const batch = await response.json();
+                    allUsers = allUsers.concat(batch);
+                    
+                    // Update progress
+                    document.getElementById('loadingText').textContent = 
+                        `Loading users... (${allUsers.length.toLocaleString()} loaded)`;
+                    
+                    if (batch.length < limit) {
+                        hasMore = false;
+                    } else {
+                        offset += limit;
+                    }
+                }
+                
+                displayUsers(allUsers);
+                updateStats();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('userTable').style.display = 'table';
+            } catch (error) {
+                document.getElementById('loadingText').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            users.forEach((user, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${user.display_name}</td>
+                    <td>@${user.username}</td>
+                    <td>${user.user_id}</td>
+                    <td>${user.age}</td>
+                `;
+            });
+
+            document.getElementById('displayedCount').textContent = users.length.toLocaleString();
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allUsers.length.toLocaleString();
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            
+            if (!query) {
+                displayUsers(allUsers);
+                return;
+            }
+
+            const filtered = allUsers.filter(user => 
+                user.display_name.toLowerCase().includes(query) ||
+                user.username.toLowerCase().includes(query) ||
+                user.user_id.includes(query)
+            );
+
+            displayUsers(filtered);
+        }
+
+        function exportCSV() {
+            const csv = [
+                ['Display Name', 'Username', 'User ID', 'Account Age'],
+                ...allUsers.map(u => [u.display_name, u.username, u.user_id, u.age])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        document.getElementById('searchBox').addEventListener('input', searchUsers);
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadAllData, 30000);
+
+        // Load on page load
+        loadAllData();
+    </script>
+</body>
+</html>
