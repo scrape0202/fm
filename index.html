@@ -268,7 +268,7 @@
                 </select>
                 <button class="btn" onclick="loadAllData(true)">Refresh</button>
             </div>
-            <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="btn secondary" onclick="exportCSV()">Export Full CSV</button>
         </div>
 
         <div id="paginationTop" class="pagination"></div>
@@ -477,16 +477,34 @@
         });
 
         function exportCSV() {
-            const cols = ['Name', 'User', 'ID', 'Region', 'Score', 'Friends', 'Donated', 'Received', 'Interests', 'Favorites'];
-            const csv = [cols.join(','), ...filteredUsers.map(u => [
-                u.display_name, u.username, u.user_id, u.region, u.score, u.friends, u.donated, u.received, `"${u.interests||''}"`, `"${u.favorites||''}"`
-            ].join(','))].join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
+            // Updated to always export allUsers (the entire database)
+            const cols = ['Display Name', 'Username', 'User ID', 'Region', 'Score', 'Friends', 'Donated', 'Received', 'Interests', 'Favorites', 'Created At'];
+            
+            // Format each row, escaping strings with commas
+            const csvRows = allUsers.map(u => [
+                `"${(u.display_name || '').replace(/"/g, '""')}"`,
+                `"${(u.username || '').replace(/"/g, '""')}"`,
+                u.user_id,
+                u.region || '',
+                u.score || 0,
+                u.friends || 0,
+                u.donated || 0,
+                u.received || 0,
+                `"${(u.interests || '').replace(/"/g, '""')}"`,
+                `"${(u.favorites || '').replace(/"/g, '""')}"`,
+                u.created_at || ''
+            ].join(','));
+
+            const csvContent = [cols.join(','), ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `export.csv`;
+            a.setAttribute('href', url);
+            a.setAttribute('download', `full_user_database_${new Date().toISOString().split('T')[0]}.csv`);
+            a.style.visibility = 'hidden';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
         }
 
         setInterval(loadAllData, 15000);
